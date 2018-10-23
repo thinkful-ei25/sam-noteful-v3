@@ -58,6 +58,7 @@ router.get('/:id', (req, res, next) => {
 router.post('/', (req, res, next) => {
   const {title, content} = req.body;
   
+  //validate user title
   if(!title){
     const err = new Error('Missing `title` in request body');
     err.status = 400;
@@ -96,7 +97,11 @@ router.put('/:id', (req, res, next) => {
   const updateNew = {new: true};
 
   //need to validate id somehow
-
+  if(!mongoose.Types.ObjectId.isValid(id)){
+    const err = new Error('Invalid `ID` entered');
+    err.status = 400;
+    return next(err);
+  }
 
   Note.findByIdAndUpdate(id,updateItem, updateNew)
     .then(result=>{
@@ -122,7 +127,7 @@ router.delete('/:id', (req, res, next) => {
     })
     .catch(err=>{
       next(err);
-    })
+    });
 });
 
 module.exports = router;
