@@ -9,11 +9,16 @@ const Note = require('../models/notes');
 
 mongoose.connect(MONGODB_URI, { useNewUrlParser:true })
   .then(() => {
-    const searchTerm = '';
+    const searchTerm = 'duis';
     let filter = {};
 
-    if (searchTerm) {
-      filter.title = { $regex: searchTerm };
+    const filterValue = new RegExp(searchTerm,'i');
+
+    if (searchTerm) { 
+      filter = {$or : [
+        {title : filterValue},
+        {content : filterValue}
+      ]};
     }
 
     return Note.find(filter).sort({ updatedAt: 'desc' });
