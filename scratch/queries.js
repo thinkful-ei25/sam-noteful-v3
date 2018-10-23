@@ -9,15 +9,17 @@ const Note = require('../models/notes');
 
 mongoose.connect(MONGODB_URI, { useNewUrlParser:true })
   .then(() => {
-    const searchTerm = 'duis';
+    const searchTerm = '';
+    const searchTerm2 = '';
     let filter = {};
 
     const filterValue = new RegExp(searchTerm,'i');
+    const filterValue2 = new RegExp(searchTerm2,'i');
 
-    if (searchTerm) { 
-      filter = {$or : [
+    if (searchTerm || searchTerm2) { 
+      filter = {$and : [
         {title : filterValue},
-        {content : filterValue}
+        {content : filterValue2}
       ]};
     }
 
