@@ -130,7 +130,7 @@ router.put('/:id', (req, res, next) => {
 router.delete('/:id', (req, res, next) => {
   const id = req.params.id;
 
-  Note.findByIdAndRemove(id)
+  Note.findOneAndDelete(id)
     .then(()=>{
       res.status(204).end();
     })
