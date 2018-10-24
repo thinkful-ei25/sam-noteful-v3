@@ -41,12 +41,19 @@ router.get('/', (req, res, next) => {
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
   const id = req.params.id;
+  if(!mongoose.Types.ObjectId.isValid(id)){
+    const err = new Error('Invalid `ID` entered');
+    err.status = 400;
+    return next(err);
+  }
   let projection = {title: 1, content: 1};
-  let sort = '';
   Note.findById(id,projection)
-    .sort(sort)
     .then(results => {
-      res.json(results);
+      if(results){
+        res.json(results);
+      } else {
+        next();
+      }
     })
     .catch(err=>{
       next(err);
@@ -65,11 +72,13 @@ router.post('/', (req, res, next) => {
     return next(err);
   }
 
+
   const newItem = {title, content};
 
   Note.create(newItem)
     .then(result=>{
-      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+      let returned = {title: result.title, content: result.content, _id: result._id};
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(returned);
     })
     .catch(err=>{
       next(err);
