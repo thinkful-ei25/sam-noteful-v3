@@ -14,7 +14,7 @@ const config = {
     delete result._id;
     delete result._v;
   }
-}
+};
 
 folderSchema.set('toObject', config);
 folderSchema.set('toJSON', config);

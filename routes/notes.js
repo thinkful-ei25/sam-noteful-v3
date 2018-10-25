@@ -55,9 +55,7 @@ router.get('/:id', (req, res, next) => {
         next();
       }
     })
-    .catch(err=>{
-      next(err);
-    });
+    .catch(err=>next(err));
 
 });
 
@@ -80,9 +78,7 @@ router.post('/', (req, res, next) => {
       let returned = {title: result.title, content: result.content, _id: result._id};
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(returned);
     })
-    .catch(err=>{
-      next(err);
-    });
+    .catch(err=>next(err));
 
 });
 
