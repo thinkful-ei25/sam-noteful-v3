@@ -33,8 +33,8 @@ router.get('/:id', (req,res,next) => {
 
   //validate ID
   if(!mongoose.Types.ObjectId.isValid(id)){
-    const err = new Error('Invalid `ID ` entered');
-    err.status(400);
+    const err = new Error('Invalid `ID` entered');
+    err.status = 400;
     return next(err);
   }
 
@@ -68,10 +68,16 @@ router.post('/', (req,res,next) => {
 
   Folder.create(newFolder)
     .then(result=>{
-      let returned = {name : result.name, id:result.id};
+      let returned = {name : result.name, id: result.id};
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(returned);
     })
-    .catch(err=>next(err));
+    .catch(err => {
+      if (err.code === 11000) {
+        err = new Error('The folder name already exists');
+        err.status = 400;
+      }
+      next(err);
+    });
   
 });
 
@@ -88,8 +94,8 @@ router.put('/:id', (req,res,next) =>{
   }
 
   if(!mongoose.Types.ObjectId.isValid(id)){
-    const err = new Error('Invalid `ID ` entered');
-    err.status(400);
+    const err = new Error('Invalid `ID` entered');
+    err.status = 400;
     return next(err);
   }
 

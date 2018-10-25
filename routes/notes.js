@@ -14,7 +14,7 @@ router.get('/', (req, res, next) => {
   const {searchTerm} = req.query;
 
   let filter={};
-  let projection = {title: 1, content:1,};
+  let projection = {title: 1, content:1,id:1};
   let sort = 'createdAt';
 
   const filterValue = new RegExp(searchTerm,'i');
@@ -75,7 +75,7 @@ router.post('/', (req, res, next) => {
 
   Note.create(newItem)
     .then(result=>{
-      let returned = {title: result.title, content: result.content, _id: result._id};
+      let returned = {title: result.title, content: result.content, id: result.id};
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(returned);
     })
     .catch(err=>next(err));

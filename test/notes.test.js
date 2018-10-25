@@ -9,12 +9,12 @@ const { TEST_MONGODB_URI } = require('../config');
 
 const Note = require('../models/notes');
 
-const { notes } = require('../db/seed/notes');
+const { notes } = require('../db/seed/data');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
 
-describe('Noteful Test', function(){
+describe('Noteful API Note Tests', function(){
   
   before(function () {
     return mongoose.connect(TEST_MONGODB_URI, {useNewUrlParser: true})
@@ -48,7 +48,7 @@ describe('Noteful Test', function(){
           expect(res.body).to.have.length(data.length);
           res.body.forEach(item=>{
             expect(item).to.be.a('object');
-            expect(item).to.have.keys('_id', 'title', 'content');
+            expect(item).to.have.keys('id', 'title', 'content');
           });
         });
 
@@ -69,7 +69,7 @@ describe('Noteful Test', function(){
           expect(res.body).to.be.a('array');
           expect(res.body).to.have.length(1);
           expect(res.body[0]).to.be.an('object');
-          expect(res.body[0]._id).to.equal(data[0].id);
+          expect(res.body[0].id).to.equal(data[0].id);
         });
 
     });
@@ -107,9 +107,9 @@ describe('Noteful Test', function(){
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('_id', 'title', 'content');
+          expect(res.body).to.have.keys('id', 'title', 'content');
 
-          expect(res.body._id).to.equal(data.id);
+          expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
           expect(res.body.content).to.equal(data.content);
         });
@@ -162,8 +162,8 @@ describe('Noteful Test', function(){
           expect(res).to.be.json;
           expect(res).to.have.header('location');
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('_id','title', 'content');
-          return Note.findById(res.body._id);
+          expect(res.body).to.have.keys('id','title', 'content');
+          return Note.findById(res.body.id);
         })
         .then(data =>{
           expect(res.body.title).to.equal(data.title);
@@ -197,6 +197,29 @@ describe('Noteful Test', function(){
     
     it('should update and return a note when provided valid inputs', function(){
       
+      const updatedNote = {
+        'title': 'test updated note',
+        'content': 'this should be sufficient'
+      };
+      let data;
+      return Note.findOne()
+        .then(_data => {
+          data = _data;
+          return chai.request(app)
+            .put(`/api/notes/${data.id}`)
+            .send(updatedNote);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'folderId', 'updatedAt');
+
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.title).to.equal(updatedNote.title);
+          expect(res.body.content).to.equal(updatedNote.content);
+        });
+
     });
 
     it('should respond with a 400 for an invalid id', function(){
