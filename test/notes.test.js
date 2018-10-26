@@ -8,8 +8,9 @@ const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
 
 const Note = require('../models/notes');
+const Folder = require('../models/folders');
 
-const { notes } = require('../db/seed/data');
+const { notes, folders } = require('../db/seed/data');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
@@ -17,12 +18,13 @@ chai.use(chaiHttp);
 describe('Noteful API Note Tests', function(){
   
   before(function () {
-    return mongoose.connect(TEST_MONGODB_URI, {useNewUrlParser: true})
-      .then(() => mongoose.connection.db.dropDatabase());
+    return mongoose.connect(TEST_MONGODB_URI, {useNewUrlParser: true});
   });
 
   beforeEach(function () {
-    return Note.insertMany(notes);
+    const noteInsertPromise = Note.insertMany(notes);
+    const folderInsertPromise = Folder.insertMany(folders);
+    return Promise.all([noteInsertPromise, folderInsertPromise]);
   });
 
   afterEach(function () {
@@ -48,7 +50,7 @@ describe('Noteful API Note Tests', function(){
           expect(res.body).to.have.length(data.length);
           res.body.forEach(item=>{
             expect(item).to.be.a('object');
-            expect(item).to.have.keys('id', 'title', 'content');
+            expect(item).to.have.keys('id', 'title', 'content', 'folderId');
           });
         });
 
@@ -72,6 +74,23 @@ describe('Noteful API Note Tests', function(){
           expect(res.body[0].id).to.equal(data[0].id);
         });
 
+    });
+
+    it('should return correct search results for a folderId query', function () {
+      let data;
+      return Folder.findOne()
+        .then((_data) => {
+          data = _data;
+          const dbPromise = Note.find({ folderId: data.id });
+          const apiPromise = chai.request(app).get(`/api/notes?folderId=${data.id}`);
+          return Promise.all([dbPromise, apiPromise]);
+        })
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
     });
 
     it('should return an empty array for non-matching query', function(){
@@ -107,7 +126,7 @@ describe('Noteful API Note Tests', function(){
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'title', 'content');
+          expect(res.body).to.have.keys('id', 'title', 'content', 'folderId');
 
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
@@ -149,7 +168,8 @@ describe('Noteful API Note Tests', function(){
 
       const newNote = {
         'title' : 'This is a test note',
-        'content' : 'Testing stuff is found in here'
+        'content' : 'Testing stuff is found in here',
+        'folderId': 'A0A0A0000000000000000100'
       };
 
       let res;
@@ -162,7 +182,7 @@ describe('Noteful API Note Tests', function(){
           expect(res).to.be.json;
           expect(res).to.have.header('location');
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('id','title', 'content');
+          expect(res.body).to.have.keys('id','title', 'content', 'folderId');
           return Note.findById(res.body.id);
         })
         .then(data =>{

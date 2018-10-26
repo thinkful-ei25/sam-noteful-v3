@@ -11,20 +11,21 @@ const Note = require('../models/notes');
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
 
-  const {searchTerm} = req.query;
+  const {searchTerm, folderId} = req.query;
 
   let filter={};
-  let projection = {title: 1, content:1,id:1};
+  let projection = {title: 1, content:1, id:1, folderId: 1};
   let sort = 'createdAt';
 
   const filterValue = new RegExp(searchTerm,'i');
 
   if(searchTerm){
-    filter = {$or : [
-      {title: filterValue},
-      {content: filterValue}
-    ]};
-    sort = '_id';
+    filter.title = {$regex : filterValue};
+    sort = 'id';
+  }
+
+  if(folderId){
+    filter.folderId = folderId;
   }
 
   Note.find(filter,projection)
@@ -46,7 +47,7 @@ router.get('/:id', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  let projection = {title: 1, content: 1};
+  let projection = {title: 1, content: 1, folderId: 1, id:1};
   Note.findById(id,projection)
     .then(results => {
       if(results){
@@ -61,7 +62,7 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const {title, content} = req.body;
+  const {title, content, folderId} = req.body;
   
   //validate user title
   if(!title){
@@ -71,11 +72,11 @@ router.post('/', (req, res, next) => {
   }
 
 
-  const newItem = {title, content};
+  const newItem = {title, content, folderId};
 
   Note.create(newItem)
     .then(result=>{
-      let returned = {title: result.title, content: result.content, id: result.id};
+      let returned = {title: result.title, content: result.content, id: result.id, folderId: result.folderId};
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(returned);
     })
     .catch(err=>next(err));
@@ -85,7 +86,7 @@ router.post('/', (req, res, next) => {
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
   const id = req.params.id;
-  const {title, content} = req.body;
+  const {title, content, folderId} = req.body;
 
 
   //validate user input for title
@@ -96,7 +97,7 @@ router.put('/:id', (req, res, next) => {
   }
 
   const updateItem = {
-    title , content
+    title , content, folderId
   };
 
   const updateNew = {new: true};
