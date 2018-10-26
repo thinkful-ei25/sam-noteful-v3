@@ -71,19 +71,13 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content, folderId, tags } = req.body;
 
-  const newItem = {};
-  const postFields = ['title', 'content', 'folderId', 'tags'];
+  const { title, content, folderId, tags} = req.body;
 
-  postFields.forEach(field => {
-    if (field in req.body) {
-      newItem[field] = req.body[field];
-    }
-  });
+  const newItem = {title, content, folderId, tags};
 
   //validate user title
-  if (!newItem.title === '') {
+  if (!newItem.title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
@@ -136,7 +130,7 @@ router.put('/:id', (req, res, next) => {
   });
 
   //validate user input for title
-  if (updateItem.title === '') {
+  if (!updateItem.title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);

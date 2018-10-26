@@ -56,6 +56,7 @@ if (require.main === module) {
       console.error(err);
     });
 
+
   if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, function () {
       console.info(`Server listening on ${this.address().port}`);
@@ -63,6 +64,7 @@ if (require.main === module) {
       console.error(err);
     });
   }
+
 }
 
 module.exports = app; // Export for testing

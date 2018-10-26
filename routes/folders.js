@@ -16,7 +16,6 @@ router.get('/', (req, res, next) => {
   let projection = {name: 1};
 
   Folder.find({}, projection)
-    .sort('name')
     .then(result=>{
       res.json(result);
     })
