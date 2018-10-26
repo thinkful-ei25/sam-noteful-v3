@@ -1,21 +1,21 @@
 'use strict';
 
 const express = require('express');
+
 const router = express.Router();
 
 const mongoose = require('mongoose');
 
-const Folder = require('../models/folders');
+const Tag = require('../models/tags');
 const Note = require('../models/notes');
 
+//GET/READ ALL TAGS
 
-//GET all /folders
-
-router.get('/', (req, res, next) => {
+router.get('/', (req,res,next)=>{
 
   let projection = {name: 1};
 
-  Folder.find({}, projection)
+  Tag.find({}, projection)
     .sort('name')
     .then(result=>{
       res.json(result);
@@ -23,23 +23,23 @@ router.get('/', (req, res, next) => {
     .catch(err=>{
       next(err);
     });
-
+  
 });
 
-//GET /folders by id
+//GET/READ SINGLE TAG BY ID
 
-router.get('/:id', (req,res,next) => {
+router.get('/:id', (req,res,next)=>{
+
   const id = req.params.id;
 
-  //validate ID
   if(!mongoose.Types.ObjectId.isValid(id)){
     const err = new Error('Invalid `ID` entered');
     err.status = 400;
     return next(err);
   }
 
-  let projection = {name: 1};
-  Folder.findById(id, projection)
+  let projection = {name : 1};
+  Tag.findById(id,projection)
     .then(result=>{
       if(result){
         res.json(result);
@@ -49,13 +49,11 @@ router.get('/:id', (req,res,next) => {
     })
     .catch(err=>next(err));
 
-
-
 });
 
-//POST /folders to create new folder
+//POST NEW TAG
 
-router.post('/', (req,res,next) => {
+router.post('/', (req,res,next)=>{
   const { name } = req.body;
 
   if(!name){
@@ -64,26 +62,26 @@ router.post('/', (req,res,next) => {
     return next(err);
   }
 
-  const newFolder = { name };
+  const newTag = { name };
 
-  Folder.create(newFolder)
+  Tag.create(newTag)
     .then(result=>{
-      let returned = {name : result.name, id: result.id};
+      let returned = {name: result.name, id: result.id};
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(returned);
     })
-    .catch(err => {
-      if (err.code === 11000) {
-        err = new Error('The folder name already exists');
+    .catch(err=>{
+      if(err.code === 11000){
+        err = new Error('The tag name already exists');
         err.status = 400;
       }
       next(err);
     });
-  
+
 });
 
-//PUT /folders by id to update a folder name
+//PUT A SINGLE TAG
 
-router.put('/:id', (req,res,next) =>{
+router.put('/:id', (req,res,next)=>{
   const id = req.params.id;
   const { name } = req.body;
 
@@ -99,10 +97,10 @@ router.put('/:id', (req,res,next) =>{
     return next(err);
   }
 
-  const updateFolder = { name };
+  const updateTag = { name };
   const updateNew = {new: true};
 
-  Folder.findByIdAndUpdate(id, updateFolder, updateNew)
+  Tag.findByIdAndUpdate(id, updateTag, updateNew)
     .then(result =>{
       if(result){
         res.json(result);
@@ -111,8 +109,8 @@ router.put('/:id', (req,res,next) =>{
       }
     })
     .catch(err=>{
-      if (err.code === 11000) {
-        err = new Error('The folder name already exists');
+      if(err.code === 11000){
+        err = new Error('The tag name already exists');
         err.status = 400;
       }
       next(err);
@@ -120,9 +118,9 @@ router.put('/:id', (req,res,next) =>{
 
 });
 
-//DELETE /folders by id which deletes the folder and the related notes
+//DELETE A TAG
 
-router.delete('/:id', (req,res,next) => {
+router.delete(':/id', (req,res,next)=>{
   const id = req.params.id;
 
   if(!mongoose.Types.ObjectId.isValid(id)){
@@ -131,19 +129,22 @@ router.delete('/:id', (req,res,next) => {
     return next(err);
   }
 
-  const folderRemovePromise = Folder.findByIdAndRemove({_id: id});
-  const noteRemovePromise = Note.deleteMany({folderId: id});
-  
-  Promise.all([folderRemovePromise, noteRemovePromise])
-    .then(results =>{
-      const folderResult = results[0];
-      if(folderResult){
+  const tagRemovePromise = Tag.findByIdAndRemove(id);
+
+  const noteUpdatePromise = Note.updateMany(
+    {'tags' : id},
+    { '$pull' : { 'tags' : id }  }
+  );
+
+  Promise.all([tagRemovePromise,noteUpdatePromise])
+    .then(([tagResult]) => {
+      if(tagResult){
         res.status(204).end();
       } else {
         next();
       }
     })
-    .catch(err=>next(err));
+    .catch(next);
 
 });
 
