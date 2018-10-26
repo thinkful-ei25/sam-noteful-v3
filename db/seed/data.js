@@ -94,6 +94,6 @@ const tags = [
     "_id": "222222222222222222222203",
     "name": "feral"
   }
-]
+];
 
 module.exports = { notes, folders, tags };

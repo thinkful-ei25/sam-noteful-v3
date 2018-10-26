@@ -12,7 +12,7 @@ const config = {
   virtuals: true,
   transform: (doc,result)=>{
     delete result._id;
-    delete result._v;
+    delete result.__v;
   }
 };
 
